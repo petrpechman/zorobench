@@ -1,0 +1,18 @@
+{"session_id": "sess1", "messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Hello!"}], "max_tokens": 50}
+{"session_id": "sess2", "messages": [{"role": "system", "content": "You are a friendly tutor."}, {"role": "user", "content": "Explain Pythagoras theorem."}], "max_tokens": 40}
+{"session_id": "sess4", "messages": [{"role": "system", "content": "You are a travel guide."}, {"role": "user", "content": "Suggest a 3-day itinerary in Paris."}], "max_tokens": 60}
+{"session_id": "sess3", "messages": [{"role": "system", "content": "You are a creative storyteller."}, {"role": "user", "content": "Write a short story about a dragon."}], "max_tokens": 60}
+{"session_id": "sess5","messages": [{"role": "system", "content": "You are a helpful assistant that can get weather data."},{"role": "user", "content": "What is the weather in New York tomorrow?"}],"tools": [{"type": "function","function": {"name": "get_weather","description": "Get current temperature for a given location.","parameters": {"type": "object","properties": {"location": {"type": "string","description": "City and country e.g. Paris, France"}},"required": ["location"],"additionalProperties": false},"strict": true}}],"max_tokens": 250}
+
+{"session_id": "sess2", "messages": [{"role": "user", "content": "Give an example with numbers."}], "max_tokens": 35}
+{"session_id": "sess1", "messages": [{"role": "user", "content": "Tell me a joke."}], "max_tokens": 30}
+{"session_id": "sess3", "messages": [{"role": "user", "content": "Make it funny."}], "max_tokens": 50}
+{"session_id": "sess4", "messages": [{"role": "user", "content": "Include hidden gems."}], "max_tokens": 50}
+{"session_id": "sess5", "messages": [{"role": "tool", "name": "get_weather", "content": "{ \"temperature\": 22, \"condition\": \"sunny\" }"}], "max_tokens": 30}
+{"session_id": "sess6","messages":[{"role":"user","content":"Extract event information from the text:\n\nAlice and Bob are going to a science fair on Friday."}],"response_format":{"type":"json_schema","json_schema":{"name":"calendar_event","schema":{"type":"object","properties":{"name":{"type":"string"},"date":{"type":"string"},"participants":{"type":"array","items":{"type":"string"}}},"required":["name","date","participants"],"additionalProperties":false},"strict":true}}}
+
+{"session_id": "sess4", "messages": [{"role": "user", "content": "Add some food recommendations."}], "max_tokens": 50}
+{"session_id": "sess3", "messages": [{"role": "user", "content": "Add a twist ending."}], "max_tokens": 50}
+{"session_id": "sess1", "messages": [{"role": "user", "content": "What's the weather today?"}], "max_tokens": 25}
+{"session_id": "sess2", "messages": [{"role": "user", "content": "Thank you!"}], "max_tokens": 20}
+{"session_id": "sess6","messages":[{"role":"user","content":"Ok, thank you!"}], "max_tokens": 50}
