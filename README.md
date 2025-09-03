@@ -1,14 +1,29 @@
-Install:
+# ZoroBench
 
+ZoroBench is a tool for asynchronous model evaluation with configurable concurrency.
+
+## Installation
+
+```bash
 pip install .
+```
 
+### Optional Configuration
 
-Optional:
-
+If you are using the OpenAI API, you can set your API key and base URL:
+```bash
 export OPENAI_API_KEY="<TOKEN>"
 export OPENAI_BASE_URL="<BASE-URL>"
+```
 
+## Usage
 
-Try run - concurrency 3:
+To run a model with a specified concurrency (e.g., 3), use:
 
+```bash
 zorobench run "<MODEL-NAME>" 3 data/example.json
+```
+
+- <MODEL-NAME> – the name of the model to test
+- 3 – the number of concurrent tasks
+- data/example.json – path to the input data file
