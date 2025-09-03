@@ -11,4 +11,4 @@ dependencies = [
 ]
 
 [project.scripts]
-zorobench = "py_src.cli:entry_point"
+zorobench = "src.cli:entry_point"
