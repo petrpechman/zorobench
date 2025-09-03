@@ -23,6 +23,7 @@ class Root:
             filepath: str,
             concurrency: int = 1, 
             # stream: bool = False,
+            output_file: str = "output.json",
             use_multithreading: bool = False):
         """TODO: Write
 
@@ -55,6 +56,7 @@ class Root:
         end = time.perf_counter()
 
         RequestStatistics.print(results)
+        RequestStatistics.save_to_json(results, output_file)
         if use_multithreading:
             print("MULTITHREADING")
         else:
