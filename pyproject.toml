@@ -12,3 +12,6 @@ dependencies = [
 
 [project.scripts]
 zorobench = "src.cli:entry_point"
+
+[tool.setuptools]
+packages = ["src", "src.cli"]
