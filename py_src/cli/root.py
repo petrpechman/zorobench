@@ -1,3 +1,4 @@
+
 import os
 import asyncio
 
@@ -9,6 +10,8 @@ from ..data_utils.data_loader import DataLoader
 from ..async_utils.asyncpool import AsyncPool
 from ..async_utils.async_session_queue import AsyncSessionIDQueue
 from ..requester.openai_api_requester import OpenAIAPIRequester
+
+import time
 
 class Root:
     """
@@ -26,13 +29,15 @@ class Root:
         Args:
             num: Number.
         """
-        api_key = os.getenv("SASANKA_TOKEN")
-        base_url = "https://llm-proxy.seznam.net/v1"
+        api_key = None
+        base_url = None
+
 
         loader = DataLoader(filepath)
         request_payloads = loader.get_request_payloads()
         stream = True
-
+        
+        now = time.perf_counter()
         if use_multithreading:
             pool = ThreadPool(concurrency)
 
@@ -46,10 +51,13 @@ class Root:
             async_session_queue = AsyncSessionIDQueue(request_payloads)
             requester = OpenAIAPIRequester(stream=stream, model=model, api_key=api_key, base_url=base_url)
 
-            results: list[RequestStatistics] = asyncio.run(pool.run(requester.send_request, async_session_queue))
+            results: list[RequestStatistics] = asyncio.run(pool.run(requester.asend_request, async_session_queue))
+        end = time.perf_counter()
 
         RequestStatistics.print(results)
         if use_multithreading:
             print("MULTITHREADING")
         else:
             print("ASYNC")
+        total_time = end - now
+        print(f"Total time: {total_time:.4f}")

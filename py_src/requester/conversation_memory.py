@@ -35,7 +35,7 @@ class ConversationMemory:
 
     def get_history(self, session_id: str) -> List[Dict[str, str]]:
         """Vrátí historii konverzace."""
-        return self._sessions[session_id].copy()
+        return self._sessions[session_id]
 
     def clear(self, session_id: str) -> None:
         """Vymaže historii konkrétní session."""
