@@ -24,6 +24,6 @@ To run a model with a specified concurrency (e.g., 3), use:
 zorobench run "<MODEL-NAME>" data/example.jsonl -c 3
 ```
 
-- <MODEL-NAME> – the name of the model to test
+- MODEL-NAME – the name of the model to test
+- data/example.jsonl – path to the input data file
 - 3 – the number of concurrent tasks
-- data/example.json – path to the input data file
