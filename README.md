@@ -2,6 +2,8 @@
 
 ZoroBench is a tool for asynchronous model evaluation with configurable concurrency.
 
+Current works only for vLLM OpenAI API endpoints.
+
 ## Installation
 
 ```bash

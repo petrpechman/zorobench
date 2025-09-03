@@ -46,6 +46,12 @@ class OpenAIAPIRequester:
             if self.model:
                 params["model"] = self.model
 
+            if "stream_options" in params:
+                print("Warning: Provided 'stream_options' will be overwritten.")
+            params["stream_options"] = {
+                "include_usage": True
+            }
+
             if "model" not in params:
                 raise ValueError("Missing 'model' key in parameters. Please define it in the code or in the data file.")
             
@@ -60,8 +66,8 @@ class OpenAIAPIRequester:
 
             for chunk in response_stream:
 
-                delta = chunk.choices[0].delta
-                if delta:
+                delta = chunk.choices[0].delta if chunk.choices else None
+                if delta and delta.role is None:
 
                     now = time.perf_counter()
                     if first_token_time is None:
@@ -84,6 +90,16 @@ class OpenAIAPIRequester:
                             if not final_tool_calls[index].function.arguments:
                                 final_tool_calls[index].function.arguments = ""
                             final_tool_calls[index].function.arguments += tool_call.function.arguments
+
+                if chunk.usage:
+                    completions_tokens = chunk.usage["completion_tokens"]
+
+            output_tokens = 1 + len(itl_list)
+            e2e = last_token_time - start_request
+
+            if completions_tokens != output_tokens:
+                print("Completion tokens: ", completions_tokens)
+                print("Output tokens: ", output_tokens)
                             
             
             e2e = last_token_time - start_request
@@ -96,7 +112,7 @@ class OpenAIAPIRequester:
             print("\n\n" ,session_id)
             print(messages)
             print(f"\nE2E: {e2e:.4f}s, TTFT: {ttft:.4f}s, ITL průměr: {sum(itl_list)/len(itl_list) if itl_list else 0:.4f}s")
-            return RequestStatistics(e2e, ttft, tuple(itl_list), 1 + len(itl_list))
+            return RequestStatistics(e2e, ttft, tuple(itl_list), output_tokens)
 
         else:
             start_request = time.perf_counter()
@@ -136,6 +152,12 @@ class OpenAIAPIRequester:
             if "model" not in params:
                 raise ValueError("Missing 'model' key in parameters. Please define it in the code or in the data file.")
             
+            if "stream_options" in params:
+                print("Warning: Provided 'stream_options' will be overwritten.")
+            params["stream_options"] = {
+                "include_usage": True
+            }
+            
             response_stream = await self.aclient.chat.completions.create(
                 messages=messages,
                 stream=True,
@@ -147,8 +169,8 @@ class OpenAIAPIRequester:
 
             async for chunk in response_stream:
 
-                delta = chunk.choices[0].delta
-                if delta:
+                delta = chunk.choices[0].delta if chunk.choices else None
+                if delta and delta.role is None:
 
                     now = time.perf_counter()
                     if first_token_time is None:
@@ -171,9 +193,18 @@ class OpenAIAPIRequester:
                             if not final_tool_calls[index].function.arguments:
                                 final_tool_calls[index].function.arguments = ""
                             final_tool_calls[index].function.arguments += tool_call.function.arguments
+
+                if chunk.usage:
+                    completions_tokens = chunk.usage.completion_tokens
                             
-            
+            output_tokens = 1 + len(itl_list)
             e2e = last_token_time - start_request
+
+            if completions_tokens != output_tokens:
+                print("WARNING:")
+                print("Completion tokens: ", completions_tokens)
+                print("Output tokens: ", output_tokens)
+
             if session_id:
                 if full_text:
                     self.memory.add_assistant_message(session_id, full_text)
@@ -183,7 +214,7 @@ class OpenAIAPIRequester:
             print("\n\n" ,session_id)
             print(messages)
             print(f"\nE2E: {e2e:.4f}s, TTFT: {ttft:.4f}s, ITL průměr: {sum(itl_list)/len(itl_list) if itl_list else 0:.4f}s")
-            return RequestStatistics(e2e, ttft, tuple(itl_list), 1 + len(itl_list))
+            return RequestStatistics(e2e, ttft, tuple(itl_list), output_tokens)
 
         else:
             start_request = time.perf_counter()
