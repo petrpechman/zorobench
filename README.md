@@ -21,7 +21,7 @@ export OPENAI_BASE_URL="<BASE-URL>"
 To run a model with a specified concurrency (e.g., 3), use:
 
 ```bash
-zorobench run "<MODEL-NAME>" data/example.json -c 3
+zorobench run "<MODEL-NAME>" data/example.jsonl -c 3
 ```
 
 - <MODEL-NAME> – the name of the model to test
