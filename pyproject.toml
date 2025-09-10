@@ -11,7 +11,11 @@ dependencies = [
 ]
 
 [project.scripts]
-zorobench = "src.cli:entry_point"
+zorobench = "zorobench.cli:entry_point"
 
-[tool.setuptools]
-packages = ["src", "src.cli"]
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["zorobench*"]

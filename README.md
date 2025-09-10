@@ -7,7 +7,7 @@ Current works only for vLLM OpenAI API endpoints.
 ## Installation
 
 ```bash
-pip install -e .
+pip install .
 ```
 
 ### Optional Configuration
