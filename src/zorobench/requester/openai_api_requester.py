@@ -110,12 +110,7 @@ class OpenAIAPIRequester:
                                 final_tool_calls[index].function.arguments += tool_call.function.arguments
 
                     if chunk.usage:
-                        # openai v1: usage may be dict or typed object; be defensive
-                        usage = chunk.usage
-                        try:
-                            completions_tokens = usage["completion_tokens"] if isinstance(usage, dict) else usage.completion_tokens
-                        except Exception:
-                            completions_tokens = None
+                        completions_tokens = chunk.usage.completion_tokens
 
                 output_tokens = 1 + len(itl_list)
                 e2e = (last_token_time or time.perf_counter()) - start_request
@@ -224,7 +219,7 @@ class OpenAIAPIRequester:
                         completions_tokens = chunk.usage.completion_tokens
                             
                 output_tokens = 1 + len(itl_list)
-                e2e = last_token_time - start_request
+                e2e = (last_token_time or time.perf_counter()) - start_request
 
                 if completions_tokens is not None and completions_tokens != output_tokens:
                     print("WARNING:")
