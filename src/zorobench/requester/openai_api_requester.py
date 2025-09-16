@@ -113,8 +113,7 @@ class OpenAIAPIRequester:
 
         if completions_tokens != output_tokens:
             logging.warning(
-                f"Completion tokens: {completions_tokens}\n"
-                f"Output tokens: {output_tokens}\n"
+                f"Completion tokens: {completions_tokens} != Output tokens: {output_tokens}\n"
                 f"Request response: {request_response}"
             )
 
