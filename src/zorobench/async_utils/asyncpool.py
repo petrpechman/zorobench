@@ -1,6 +1,8 @@
 import asyncio
+
 from typing import Callable, Any
 from .async_session_queue import AsyncSessionIDQueue
+
 
 class AsyncPool:
     def __init__(self, concurrency: int):
@@ -22,11 +24,9 @@ class AsyncPool:
                         result = func(**kwargs)
                     await results_queue.put(result)
 
-
         tasks = [asyncio.create_task(worker()) for _ in range(self.concurrency)]
-        
-        await asyncio.gather(*tasks)
 
+        await asyncio.gather(*tasks)
 
         results = []
         while not results_queue.empty():

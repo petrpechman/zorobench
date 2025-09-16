@@ -1,30 +1,26 @@
-
-import os
 import asyncio
+import time
 
-from ..requester.requester_worker import RequesterWorker
 from ..requester.request_statistics import RequestStatistics
-from ..threading_utils.threadpool import ThreadPool
-from ..threading_utils.session_queue import SessionIDQueue
 from ..data_utils.data_loader import DataLoader
 from ..async_utils.asyncpool import AsyncPool
 from ..async_utils.async_session_queue import AsyncSessionIDQueue
 from ..requester.openai_api_requester import OpenAIAPIRequester
 
-import time
 
 class Root:
     """
     TODO: Write
     """
 
-    def run(self, 
-            model: str, 
-            filepath: str,
-            concurrency: int = 1, 
-            # stream: bool = False,
-            output_file: str = "output.json",
-            use_multithreading: bool = False):
+    def run(
+        self,
+        model: str,
+        filepath: str,
+        concurrency: int = 1,
+        # stream: bool = False,
+        output_file: str = "output.json",
+    ):
         """TODO: Write
 
         Args:
@@ -33,33 +29,22 @@ class Root:
         api_key = None
         base_url = None
 
-
         loader = DataLoader(filepath)
         request_payloads = loader.get_request_payloads()
         stream = True
-        
+
         now = time.perf_counter()
-        if use_multithreading:
-            pool = ThreadPool(concurrency)
 
-            requester_worker = RequesterWorker(stream, model, api_key, base_url)
-            session_id_queue = SessionIDQueue(request_payloads)
+        pool = AsyncPool(concurrency)
 
-            results: list[RequestStatistics] = pool.run(requester_worker, session_id_queue)
-        else:
-            pool = AsyncPool(concurrency)
+        async_session_queue = AsyncSessionIDQueue(request_payloads)
+        requester = OpenAIAPIRequester(stream=stream, model=model, api_key=api_key, base_url=base_url)
 
-            async_session_queue = AsyncSessionIDQueue(request_payloads)
-            requester = OpenAIAPIRequester(stream=stream, model=model, api_key=api_key, base_url=base_url)
+        results: list[RequestStatistics] = asyncio.run(pool.run(requester.asend_request, async_session_queue))
 
-            results: list[RequestStatistics] = asyncio.run(pool.run(requester.asend_request, async_session_queue))
         end = time.perf_counter()
 
         RequestStatistics.print(results)
         RequestStatistics.save_to_json(results, output_file)
-        if use_multithreading:
-            print("MULTITHREADING")
-        else:
-            print("ASYNC")
         total_time = end - now
         print(f"Total time: {total_time:.4f}")

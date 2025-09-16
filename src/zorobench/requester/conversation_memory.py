@@ -1,7 +1,7 @@
-import threading
 from collections import defaultdict
 from typing import List, Dict, Optional
-from openai.types.chat.chat_completion_chunk import ChoiceDeltaToolCall, ChoiceDeltaToolCallFunction
+from openai.types.chat.chat_completion_chunk import ChoiceDeltaToolCall
+
 
 class ConversationMemory:
     def __init__(self, limit_history: Optional[int] = None):
@@ -20,12 +20,9 @@ class ConversationMemory:
         """Přidá odpověď asistenta do historie."""
         self._sessions[session_id].append({"role": "assistant", "content": content})
         self._truncate_if_needed(session_id)
-    
+
     def add_tool_call(self, session_id: str, tool_calls: dict[ChoiceDeltaToolCall]) -> None:
-        tool_history = {
-                "role": "assistant",
-                "tool_calls": []
-            }
+        tool_history = {"role": "assistant", "tool_calls": []}
         for index, tool_call in tool_calls.items():
             if tool_call.type != "function":
                 raise Exception("No tool call is supported except for function calls.")
@@ -44,4 +41,4 @@ class ConversationMemory:
     def _truncate_if_needed(self, session_id: str) -> None:
         """Pokud je nastaven max_history, ořeže historii."""
         if self.max_history is not None:
-            self._sessions[session_id] = self._sessions[session_id][-self.max_history:]
+            self._sessions[session_id] = self._sessions[session_id][-self.max_history :]

@@ -1,7 +1,8 @@
 import json
 import numpy as np
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
+
 
 @dataclass(frozen=True)
 class RequestStatistics:
@@ -34,7 +35,7 @@ class RequestStatistics:
             key = str(s.status_code) if s.status_code is not None else "unknown"
             status_breakdown[key] = status_breakdown.get(key, 0) + 1
         return status_breakdown
-    
+
     @staticmethod
     def print(statistics: list["RequestStatistics"]) -> None:
         e2e_values = [s.e2e for s in statistics]

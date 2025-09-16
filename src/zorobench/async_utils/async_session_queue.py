@@ -1,6 +1,8 @@
+import asyncio
+
 from typing import Optional
 from dataclasses import dataclass, field, asdict
-import asyncio
+
 
 @dataclass
 class RequestPayload:
@@ -10,7 +12,6 @@ class RequestPayload:
 
 
 class AsyncIDItem:
-    """Async context manager pro jeden item v queue."""
     def __init__(self, queue: "AsyncSessionIDQueue", request_payload: RequestPayload | None, session_id: str | None):
         self.queue = queue
         self.request_payload = request_payload
@@ -25,7 +26,9 @@ class AsyncIDItem:
 
     def get_kwargs(self) -> dict:
         if not self.active:
-            raise RuntimeError(f"SessionIDItem with session_id={self.session_id} is not active. Access only inside 'async with' block.")
+            raise RuntimeError(
+                f"SessionIDItem with session_id={self.session_id} is not active. Access only inside 'async with' block."
+            )
         return asdict(self.request_payload)
 
     async def __aexit__(self, exc_type, exc_value, traceback):
@@ -35,7 +38,6 @@ class AsyncIDItem:
 
 
 class AsyncSessionIDQueue:
-    """Async verze SessionIDQueue."""
     def __init__(self, request_payloads: list[RequestPayload], session_id_key: str = "session_id"):
         self.request_payloads = request_payloads
         self.current_session_ids = set()
