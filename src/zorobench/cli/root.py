@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 
 from ..requester.request_statistics import RequestStatistics
@@ -6,6 +7,10 @@ from ..data_utils.data_loader import DataLoader
 from ..async_utils.asyncpool import AsyncPool
 from ..async_utils.async_session_queue import AsyncSessionIDQueue
 from ..requester.openai_api_requester import OpenAIAPIRequester
+
+logging.basicConfig(
+    level=logging.INFO, format="[%(asctime)s] [%(levelname)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+)
 
 
 class Root:
@@ -47,4 +52,4 @@ class Root:
         RequestStatistics.print(results)
         RequestStatistics.save_to_json(results, output_file)
         total_time = end - now
-        print(f"Total time: {total_time:.4f}")
+        logging.info(f"Total time: {total_time:.4f}")

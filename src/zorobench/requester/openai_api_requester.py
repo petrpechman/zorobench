@@ -1,6 +1,7 @@
 import time
 import sys
 import json
+import logging
 
 from typing import Any
 from openai import APIStatusError
@@ -54,12 +55,12 @@ class OpenAIAPIRequester:
             # Fallback if messages contain non-serializable objects
             body_str = str(payload)
         rid_part = f", request_id={request_id}" if request_id else ""
-        print(
+        error_message = (
             f"[ERROR] Request failed (status={status_code if status_code is not None else 'unknown'}) in {elapsed:.4f}s; "
             f"session_id={session_id}{rid_part}; error={type(err).__name__}: {err}\n"
-            f"Request body: {body_str}",
-            file=sys.stderr,
+            f"Request body: {body_str}"
         )
+        logging.error(error_message)
         return status_code
 
     def _process_chunk(self, chunk, timer: RequestTimer, request_response: RequestResponse):
@@ -87,7 +88,7 @@ class OpenAIAPIRequester:
 
         if self.stream:
             if "stream_options" in params:
-                print("Warning: Provided 'stream_options' will be overwritten.")
+                logging.warning("Warning: Provided 'stream_options' will be overwritten.")
             params["stream_options"] = {"include_usage": True}
 
     async def _asend_stream_request(
@@ -111,12 +112,13 @@ class OpenAIAPIRequester:
         output_tokens = 1 + len(itl_list)
 
         if completions_tokens != output_tokens:
-            print("WARNING:")
-            print("Completion tokens: ", completions_tokens)
-            print("Output tokens: ", output_tokens)
-            print(request_response)
+            logging.warning(
+                f"Completion tokens: {completions_tokens}\n"
+                f"Output tokens: {output_tokens}\n"
+                f"Request response: {request_response}"
+            )
 
-        print(
+        logging.info(
             f"\nE2E: {e2e:.4f}s, TTFT: {ttft:.4f}s, ITL průměr: {sum(itl_list)/len(itl_list) if itl_list else 0:.4f}s"
         )
         return RequestStatistics(e2e, ttft, tuple(itl_list), output_tokens, 200), request_response
@@ -143,7 +145,7 @@ class OpenAIAPIRequester:
         completions_tokens = response.usage.completion_tokens
         if completions_tokens is None:
             raise RuntimeError("Failed to retrieve the number of tokens from the stream.")
-        print(f"E2E: {e2e:.4f}s")
+        logging.info(f"E2E: {e2e:.4f}s")
         return RequestStatistics(e2e, ttft, itl_list, completions_tokens, 200), request_response
 
     async def asend_request(
