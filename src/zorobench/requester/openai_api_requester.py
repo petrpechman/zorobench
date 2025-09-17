@@ -1,11 +1,10 @@
 import time
-import sys
 import json
 import logging
 
 from typing import Any
 from openai import APIStatusError
-from openai import OpenAI, AsyncOpenAI
+from openai import AsyncOpenAI
 from .request_statistics import RequestStatistics
 from .conversation_memory import ConversationMemory
 from .request_timer import RequestTimer

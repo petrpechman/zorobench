@@ -1,13 +1,11 @@
 import time
 
-from typing import Optional
-
 
 class RequestTimer:
     def __init__(self) -> None:
         self.start_time: float = 0.0
-        self.first_token_time: Optional[float] = None
-        self.last_token_time: Optional[float] = None
+        self.first_token_time: float | None = None
+        self.last_token_time: float | None = None
         self.itl_list: list[float] = []
 
     def start(self) -> None:
@@ -36,4 +34,12 @@ class RequestTimer:
 
         itl_list = tuple(self.itl_list) if self.itl_list else None
 
+        self._clear()
+
         return e2e, ttft, itl_list
+
+    def _clear(self):
+        self.start_time = 0.0
+        self.first_token_time = None
+        self.last_token_time = None
+        self.itl_list = []

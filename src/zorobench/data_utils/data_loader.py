@@ -1,5 +1,5 @@
 import json
-import warnings
+import logging
 
 from pathlib import Path
 from ..async_utils.async_session_queue import RequestPayload
@@ -36,14 +36,14 @@ class DataLoader:
                 self.data.append(entry)
 
         if found_model:
-            warnings.warn("The file contains the key 'model'. Any defined model may be overwritten.", UserWarning)
+            logging.warning("The file contains the key 'model'. Any defined model may be overwritten.")
         if found_stream:
-            warnings.warn("The file contains the key 'stream'. Stream will be ignored.", UserWarning)
+            logging.warning("The file contains the key 'stream'. Stream will be ignored.")
 
     def get_data(self) -> list[dict]:
         return self.data
 
-    def _convert_data_into_kwargs(self) -> list[RequestPayload]:
+    def _convert_data_into_payloads(self) -> list[RequestPayload]:
         request_payloads = []
         for dato in self.data:
             session_id = dato.pop("session_id")
@@ -53,4 +53,4 @@ class DataLoader:
         return request_payloads
 
     def get_request_payloads(self) -> list[RequestPayload]:
-        return self._convert_data_into_kwargs()
+        return self._convert_data_into_payloads()
