@@ -119,7 +119,7 @@ class OpenAIAPIRequester:
         logging.info(
             f"\nE2E: {e2e:.4f}s, TTFT: {ttft:.4f}s, ITL průměr: {sum(itl_list)/len(itl_list) if itl_list else 0:.4f}s"
         )
-        return RequestStatistics(e2e, ttft, tuple(itl_list), output_tokens, 200), request_response
+        return RequestStatistics(e2e, ttft, tuple(itl_list), completions_tokens, 200), request_response
 
     async def _asend_request(
         self, messages: list[dict[str, str]], params: dict[str, str], timer: RequestTimer
