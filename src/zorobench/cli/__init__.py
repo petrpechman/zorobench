@@ -1,5 +1,5 @@
 """
-TODO: WRite
+TODO: Write
 """
 
 import fire

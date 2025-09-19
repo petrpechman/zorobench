@@ -1,7 +1,8 @@
 import json
 import numpy as np
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
+
 
 @dataclass(frozen=True)
 class RequestStatistics:
@@ -34,13 +35,23 @@ class RequestStatistics:
             key = str(s.status_code) if s.status_code is not None else "unknown"
             status_breakdown[key] = status_breakdown.get(key, 0) + 1
         return status_breakdown
-    
+
+    @staticmethod
+    def _create_itl(e2e_values: list[float], ttft_values: list[float], token_nums: list[int]) -> list[float]:
+        itl_values = []
+        for e2e, ttft, token_num in zip(e2e_values, ttft_values, token_nums):
+            itl = (e2e - ttft) / token_num
+            itl_values.append(itl)
+        return itl_values
+
     @staticmethod
     def print(statistics: list["RequestStatistics"]) -> None:
         e2e_values = [s.e2e for s in statistics]
         ttft_values = [s.ttft for s in statistics if s.ttft is not None]
-        itl_values = [t for s in statistics if s.itl for t in s.itl]
+        # itl_values = [t for s in statistics if s.itl for t in s.itl]
         token_nums = [s.token_num for s in statistics if s.token_num is not None]
+
+        itl_values = RequestStatistics._create_itl(e2e_values, ttft_values, token_nums)
 
         print("E2E:", RequestStatistics._describe(e2e_values))
         print("TTFT:", RequestStatistics._describe(ttft_values))
@@ -52,9 +63,11 @@ class RequestStatistics:
     def save_to_json(statistics: list["RequestStatistics"], filename: str) -> None:
         e2e_values = [s.e2e for s in statistics]
         ttft_values = [s.ttft for s in statistics if s.ttft is not None]
-        itl_values = [t for s in statistics if s.itl for t in s.itl]
+        # itl_values = [t for s in statistics if s.itl for t in s.itl]
         token_nums = [s.token_num for s in statistics if s.token_num is not None]
         status_breakdown = RequestStatistics._status_breakdown(statistics)
+
+        itl_values = RequestStatistics._create_itl(e2e_values, ttft_values, token_nums)
 
         data = {
             "E2E": RequestStatistics._describe(e2e_values),
@@ -65,4 +78,4 @@ class RequestStatistics:
         }
 
         with open(filename, "w") as f:
-            json.dump(data, f)
+            json.dump(data, f, indent=4, sort_keys=True)

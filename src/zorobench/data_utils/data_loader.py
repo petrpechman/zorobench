@@ -1,8 +1,9 @@
 import json
-import warnings
+import logging
 
 from pathlib import Path
-from ..threading_utils.session_queue import RequestPayload
+from ..async_utils.async_session_queue import RequestPayload
+
 
 class DataLoader:
     def __init__(self, file_path):
@@ -13,7 +14,7 @@ class DataLoader:
     def _load_file(self):
         if not self.file_path.exists():
             raise FileNotFoundError(f"File {self.file_path} does not exist.")
-        
+
         found_model = False
         found_stream = False
 
@@ -27,37 +28,29 @@ class DataLoader:
                 except json.JSONDecodeError as e:
                     raise ValueError(f"Error parsing JSON on line: {line}\n{e}")
 
-                if 'model' in entry:
+                if "model" in entry:
                     found_model = True
-                if 'stream' in entry:
+                if "stream" in entry:
                     found_stream = True
 
                 self.data.append(entry)
 
         if found_model:
-            warnings.warn(
-                "The file contains the key 'model'. Any defined model may be overwritten.",
-                UserWarning
-            )
+            logging.warning("The file contains the key 'model'. Any defined model may be overwritten.")
         if found_stream:
-            warnings.warn(
-                "The file contains the key 'stream'. Stream will be ignored.",
-                UserWarning
-            )
+            logging.warning("The file contains the key 'stream'. Stream will be ignored.")
 
     def get_data(self) -> list[dict]:
         return self.data
-    
-    def _convert_data_into_kwargs(self) -> list[RequestPayload]:
+
+    def _convert_data_into_payloads(self) -> list[RequestPayload]:
         request_payloads = []
         for dato in self.data:
             session_id = dato.pop("session_id")
             messages = dato.pop("messages")
             params = dato
-            request_payloads.append(
-                RequestPayload(messages, session_id, params)
-            )
+            request_payloads.append(RequestPayload(messages, session_id, params))
         return request_payloads
-    
+
     def get_request_payloads(self) -> list[RequestPayload]:
-        return self._convert_data_into_kwargs()
+        return self._convert_data_into_payloads()

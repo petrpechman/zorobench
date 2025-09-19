@@ -1,65 +1,72 @@
-
-import os
 import asyncio
+import logging
+import time
 
-from ..requester.requester_worker import RequesterWorker
 from ..requester.request_statistics import RequestStatistics
-from ..threading_utils.threadpool import ThreadPool
-from ..threading_utils.session_queue import SessionIDQueue
 from ..data_utils.data_loader import DataLoader
 from ..async_utils.asyncpool import AsyncPool
 from ..async_utils.async_session_queue import AsyncSessionIDQueue
 from ..requester.openai_api_requester import OpenAIAPIRequester
 
-import time
 
 class Root:
     """
     TODO: Write
     """
 
-    def run(self, 
-            model: str, 
-            filepath: str,
-            concurrency: int = 1, 
-            # stream: bool = False,
-            output_file: str = "output.json",
-            use_multithreading: bool = False):
-        """TODO: Write
+    def run(
+        self,
+        model: str,
+        filepath: str,
+        concurrency: int = 1,
+        stream: bool = True,
+        output_file: str = "output.json",
+        verbose: bool = False,
+    ):
+        """
+        Executes requests to the specified model using data from a file
+        and collects statistics about each request.
 
         Args:
-            num: Number.
+            model (str): Name of the model to benchmark.
+            filepath (str): Path to the input file containing requests.
+            concurrency (int, optional): Number of concurrent requests. Defaults to 1.
+            stream (bool, optional): Whether to stream responses from the model. Defaults to True.
+            output_file (str, optional): Path to the JSON file to save benchmark results. Defaults to "output.json".
+            verbose (bool, optional): If True, enables detailed logging for progress and timing. Defaults to False.
         """
-        api_key = None
-        base_url = None
 
+        log_level = logging.INFO if verbose else logging.WARN
+        logging.basicConfig(
+            level=log_level,
+            format="[%(asctime)s] [%(levelname)s]: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
 
         loader = DataLoader(filepath)
         request_payloads = loader.get_request_payloads()
         stream = True
-        
+
+        pool = AsyncPool(concurrency)
+
+        async_session_queue = AsyncSessionIDQueue(request_payloads)
+        requester = OpenAIAPIRequester(stream=stream, model=model)
+
         now = time.perf_counter()
-        if use_multithreading:
-            pool = ThreadPool(concurrency)
-
-            requester_worker = RequesterWorker(stream, model, api_key, base_url)
-            session_id_queue = SessionIDQueue(request_payloads)
-
-            results: list[RequestStatistics] = pool.run(requester_worker, session_id_queue)
-        else:
-            pool = AsyncPool(concurrency)
-
-            async_session_queue = AsyncSessionIDQueue(request_payloads)
-            requester = OpenAIAPIRequester(stream=stream, model=model, api_key=api_key, base_url=base_url)
-
-            results: list[RequestStatistics] = asyncio.run(pool.run(requester.asend_request, async_session_queue))
+        stats: list[RequestStatistics] = asyncio.run(pool.run(requester.asend_request, async_session_queue))
         end = time.perf_counter()
+
+        results = []
+        count_errors = 0
+        for stat in stats:
+            if stat.status_code == 200:
+                results.append(stat)
+            else:
+                count_errors += 1
+
+        logging.info("Successful requests: %d/%d", len(stats) - count_errors, len(stats))
 
         RequestStatistics.print(results)
         RequestStatistics.save_to_json(results, output_file)
-        if use_multithreading:
-            print("MULTITHREADING")
-        else:
-            print("ASYNC")
         total_time = end - now
-        print(f"Total time: {total_time:.4f}")
+        logging.info(f"Total time: {total_time:.4f}")
