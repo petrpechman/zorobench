@@ -40,7 +40,7 @@ class RequestStatistics:
     def _create_itl(e2e_values: list[float], ttft_values: list[float], token_nums: list[int]) -> list[float]:
         itl_values = []
         for e2e, ttft, token_num in zip(e2e_values, ttft_values, token_nums):
-            itl = (e2e - ttft) / token_num
+            itl = (e2e - ttft) / (token_num - 1)
             itl_values.append(itl)
         return itl_values
 
