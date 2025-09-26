@@ -8,7 +8,7 @@ from dataclasses import dataclass
 class RequestStatistics:
     e2e: float
     ttft: float | None
-    itl: tuple[float] | None
+    itl: tuple[float, ...]
     token_num: int | None
     status_code: int | None = None
 
@@ -40,8 +40,9 @@ class RequestStatistics:
     def _create_itl(e2e_values: list[float], ttft_values: list[float], token_nums: list[int]) -> list[float]:
         itl_values = []
         for e2e, ttft, token_num in zip(e2e_values, ttft_values, token_nums):
-            itl = (e2e - ttft) / (token_num - 1)
-            itl_values.append(itl)
+            if token_num > 1:  # ignore requests with 1 output token
+                itl = (e2e - ttft) / (token_num - 1)
+                itl_values.append(itl)
         return itl_values
 
     @staticmethod
