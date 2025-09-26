@@ -24,7 +24,7 @@ class RequestTimer:
             self.itl_list.append(now - self.last_token_time)
             self.last_token_time = now
 
-    def finalize(self) -> tuple[float, float | None, tuple[float] | None]:
+    def finalize(self) -> tuple[float, float | None, tuple[float, ...]]:
         """Get final metrics."""
         end_time = self.last_token_time or time.perf_counter()
         e2e = end_time - self.start_time
@@ -32,7 +32,7 @@ class RequestTimer:
         if self.first_token_time:
             ttft = self.first_token_time - self.start_time
 
-        itl_list = tuple(self.itl_list) if self.itl_list else None
+        itl_list = tuple(self.itl_list)
 
         self._clear()
 
