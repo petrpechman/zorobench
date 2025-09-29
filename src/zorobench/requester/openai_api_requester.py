@@ -5,16 +5,29 @@ import logging
 from typing import Any
 from openai import APIStatusError
 from openai import AsyncOpenAI
+from dataclasses import dataclass, field, asdict
 from .request_statistics import RequestStatistics
 from .conversation_memory import ConversationMemory
 from .request_timer import RequestTimer
-from dataclasses import dataclass, field
+from ..data_utils.async_writer import AsyncFileWriter
 
 
 @dataclass
 class RequestResponse:
     content: str = ""
     tool_calls: dict = field(default_factory=dict)
+
+    def to_serializable(self) -> dict:
+        tool_calls = {}
+        for k, v in self.tool_calls.items():
+            name = v.function.name
+            arguments = v.function.arguments
+            tool_calls[k] = {"name": name, "arguments": arguments}
+
+        return {
+            "content": self.content,
+            "tool_calls": tool_calls,
+        }
 
 
 class OpenAIAPIRequester:
@@ -25,6 +38,7 @@ class OpenAIAPIRequester:
         api_key: str | None = None,
         base_url: str | None = None,
         memory: ConversationMemory | None = None,
+        log_responses: bool = False,
     ):
         self.aclient = AsyncOpenAI(
             api_key=api_key,
@@ -34,6 +48,7 @@ class OpenAIAPIRequester:
         self.model = model
         self.stream = stream
         self.memory = ConversationMemory() if memory is None else memory
+        self.async_writer = AsyncFileWriter("responses.jsonl") if log_responses else None
 
     def _log_error(
         self,
@@ -134,7 +149,6 @@ class OpenAIAPIRequester:
         message = response.choices[0].message if response.choices else None
 
         if message:
-
             request_response.content = message.content
             tool_calls = message.tool_calls or []
         for i, tool_call in enumerate(tool_calls):
@@ -171,6 +185,9 @@ class OpenAIAPIRequester:
                     self.memory.add_assistant_message(session_id, request_response.content)
                 if request_response.tool_calls:
                     self.memory.add_tool_call(session_id, request_response.tool_calls)
+
+            if self.async_writer:
+                await self.async_writer.write(json.dumps(request_response.to_serializable(), ensure_ascii=False))
         except APIStatusError as api_err:
             status_code = self._log_error(
                 api_err, messages, params, session_id, timer.start_time, api_err.status_code, api_err.request_id

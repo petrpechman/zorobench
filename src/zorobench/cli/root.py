@@ -21,6 +21,7 @@ class Root:
         concurrency: int = 1,
         stream: bool = True,
         output_file: str = "output.json",
+        log_responses: bool = False,
         verbose: bool = False,
     ):
         """
@@ -50,7 +51,7 @@ class Root:
         pool = AsyncPool(concurrency)
 
         async_session_queue = AsyncSessionIDQueue(request_payloads)
-        requester = OpenAIAPIRequester(stream=stream, model=model)
+        requester = OpenAIAPIRequester(stream=stream, model=model, log_responses=log_responses)
 
         now = time.perf_counter()
         stats: list[RequestStatistics] = asyncio.run(pool.run(requester.asend_request, async_session_queue))
