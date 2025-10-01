@@ -37,22 +37,30 @@ class RequestStatistics:
         return status_breakdown
 
     @staticmethod
-    def _create_itl(e2e_values: list[float], ttft_values: list[float], token_nums: list[int]) -> list[float]:
-        itl_values = []
-        for e2e, ttft, token_num in zip(e2e_values, ttft_values, token_nums):
-            if token_num > 1:  # ignore requests with 1 output token
-                itl = (e2e - ttft) / (token_num - 1)
-                itl_values.append(itl)
+    def _create_itl(statistics: list["RequestStatistics"]) -> list[float]:
+        itl_values: list[float] = []
+        for s in statistics:
+            if s.ttft is None or s.token_num is None or s.token_num <= 1:
+                continue
+            itl_values.append((s.e2e - s.ttft) / (s.token_num - 1))
         return itl_values
 
     @staticmethod
-    def print(statistics: list["RequestStatistics"]) -> None:
-        e2e_values = [s.e2e for s in statistics]
-        ttft_values = [s.ttft for s in statistics if s.ttft is not None]
-        # itl_values = [t for s in statistics if s.itl for t in s.itl]
-        token_nums = [s.token_num for s in statistics if s.token_num is not None]
+    def _successful_requests(statistics: list["RequestStatistics"]) -> list["RequestStatistics"]:
+        return [
+            s
+            for s in statistics
+            if s.status_code is not None and 200 <= s.status_code < 300
+        ]
 
-        itl_values = RequestStatistics._create_itl(e2e_values, ttft_values, token_nums)
+    @staticmethod
+    def print(statistics: list["RequestStatistics"]) -> None:
+        successful = RequestStatistics._successful_requests(statistics)
+
+        e2e_values = [s.e2e for s in successful]
+        ttft_values = [s.ttft for s in successful if s.ttft is not None]
+        token_nums = [s.token_num for s in successful if s.token_num is not None]
+        itl_values = RequestStatistics._create_itl(successful)
 
         print("E2E:", RequestStatistics._describe(e2e_values))
         print("TTFT:", RequestStatistics._describe(ttft_values))
@@ -62,13 +70,14 @@ class RequestStatistics:
 
     @staticmethod
     def save_to_json(statistics: list["RequestStatistics"], filename: str) -> None:
-        e2e_values = [s.e2e for s in statistics]
-        ttft_values = [s.ttft for s in statistics if s.ttft is not None]
-        # itl_values = [t for s in statistics if s.itl for t in s.itl]
-        token_nums = [s.token_num for s in statistics if s.token_num is not None]
+        successful = RequestStatistics._successful_requests(statistics)
+
+        e2e_values = [s.e2e for s in successful]
+        ttft_values = [s.ttft for s in successful if s.ttft is not None]
+        token_nums = [s.token_num for s in successful if s.token_num is not None]
         status_breakdown = RequestStatistics._status_breakdown(statistics)
 
-        itl_values = RequestStatistics._create_itl(e2e_values, ttft_values, token_nums)
+        itl_values = RequestStatistics._create_itl(successful)
 
         data = {
             "E2E": RequestStatistics._describe(e2e_values),
