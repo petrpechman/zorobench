@@ -47,11 +47,7 @@ class RequestStatistics:
 
     @staticmethod
     def _successful_requests(statistics: list["RequestStatistics"]) -> list["RequestStatistics"]:
-        return [
-            s
-            for s in statistics
-            if s.status_code is not None and 200 <= s.status_code < 300
-        ]
+        return [s for s in statistics if s.status_code is not None and 200 <= s.status_code < 300]
 
     @staticmethod
     def print(statistics: list["RequestStatistics"]) -> None:

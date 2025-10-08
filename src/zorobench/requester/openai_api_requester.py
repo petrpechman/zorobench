@@ -120,6 +120,9 @@ class OpenAIAPIRequester:
 
         e2e, ttft, itl_list = timer.finalize()
 
+        if ttft is None:
+            raise RuntimeError("TTFT is None after streaming completion.")
+
         if completions_tokens is None:
             raise RuntimeError("Failed to retrieve the number of tokens from the stream.")
 
@@ -131,9 +134,12 @@ class OpenAIAPIRequester:
                 f"Request response: {request_response}"
             )
 
-        logging.info(
-            f"\nE2E: {e2e:.4f}s, TTFT: {ttft:.4f}s, ITL průměr: {sum(itl_list)/len(itl_list) if itl_list else 0:.4f}s"
-        )
+        if completions_tokens > 1:
+            itl = (e2e - ttft) / (completions_tokens - 1)
+        else:
+            itl = 0.0
+
+        logging.info(f"\nE2E: {e2e:.4f}s, TTFT: {ttft:.4f}s, ITL: {itl:.4f}s")
         return RequestStatistics(e2e, ttft, tuple(itl_list), completions_tokens, 200), request_response
 
     async def _asend_request(
@@ -158,7 +164,7 @@ class OpenAIAPIRequester:
         if completions_tokens is None:
             raise RuntimeError("Failed to retrieve the number of tokens from the stream.")
         logging.info(f"E2E: {e2e:.4f}s")
-        return RequestStatistics(e2e, ttft, itl_list, completions_tokens, 200), request_response
+        return RequestStatistics(e2e, ttft, tuple(itl_list), completions_tokens, 200), request_response
 
     async def asend_request(
         self,
@@ -194,5 +200,9 @@ class OpenAIAPIRequester:
             )
             e2e = time.perf_counter() - timer.start_time
             result = RequestStatistics(e2e, None, None, None, status_code)
+        except RuntimeError as runtime_err:
+            e2e = time.perf_counter() - timer.start_time
+            logging.error(f"Runtime error occurred: {runtime_err}")
+            result = RequestStatistics(e2e, None, None, None, 600)
 
         return result

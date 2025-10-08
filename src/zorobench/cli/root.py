@@ -59,13 +59,21 @@ class Root:
 
         results = []
         count_errors = 0
+        count_response_errors = 0
+        count_runtime_errors = 0
         for stat in stats:
             if stat.status_code == 200:
                 results.append(stat)
+            elif stat.status_code == 600:
+                count_runtime_errors += 1
+                count_errors += 1
             else:
+                count_response_errors += 1
                 count_errors += 1
 
         logging.info("Successful requests: %d/%d", len(stats) - count_errors, len(stats))
+        logging.info("Response errors: %d", count_response_errors)
+        logging.info("Runtime errors: %d", count_runtime_errors)
 
         RequestStatistics.print(results)
         RequestStatistics.save_to_json(results, output_file)
