@@ -34,6 +34,7 @@ class Root:
             concurrency (int, optional): Number of concurrent requests. Defaults to 1.
             stream (bool, optional): Whether to stream responses from the model. Defaults to True.
             output_file (str, optional): Path to the JSON file to save benchmark results. Defaults to "output.json".
+            log_responses (bool, optional): If True, the responses are logged into file (responses.jsonl). Defaults to False.
             verbose (bool, optional): If True, enables detailed logging for progress and timing. Defaults to False.
         """
 

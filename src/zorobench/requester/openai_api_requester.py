@@ -1,9 +1,10 @@
 import time
 import json
+import httpx
 import logging
 
 from typing import Any
-from openai import APIStatusError
+from openai import APIError, APIStatusError
 from openai import AsyncOpenAI
 from dataclasses import dataclass, field
 from .request_statistics import RequestStatistics
@@ -39,10 +40,13 @@ class OpenAIAPIRequester:
         base_url: str | None = None,
         memory: ConversationMemory | None = None,
         log_responses: bool = False,
+        timeout: tuple[float, float] = (600.0, 5.0),
     ):
+
         self.aclient = AsyncOpenAI(
             api_key=api_key,
             base_url=base_url,
+            timeout=httpx.Timeout(timeout[0], timeout[1])
         )
 
         self.model = model
@@ -193,13 +197,19 @@ class OpenAIAPIRequester:
                     self.memory.add_tool_call(session_id, request_response.tool_calls)
 
             if self.async_writer:
-                await self.async_writer.write(json.dumps(request_response.to_serializable(), ensure_ascii=False))
+                serialized_response = request_response.to_serializable()
+                if session_id:
+                    serialized_response["session_id"] = session_id
+                await self.async_writer.write(json.dumps(serialized_response, ensure_ascii=False))
         except APIStatusError as api_err:
             status_code = self._log_error(
                 api_err, messages, params, session_id, timer.start_time, api_err.status_code, api_err.request_id
             )
             e2e = time.perf_counter() - timer.start_time
             result = RequestStatistics(e2e, None, None, None, status_code)
+        except APIError as e:
+            logging.error(f"API error occurred: {e}")
+            result = RequestStatistics(e2e, None, None, None, 600)
         except RuntimeError as runtime_err:
             e2e = time.perf_counter() - timer.start_time
             logging.error(f"Runtime error occurred: {runtime_err}")
