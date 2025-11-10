@@ -40,13 +40,15 @@ class OpenAIAPIRequester:
         base_url: str | None = None,
         memory: ConversationMemory | None = None,
         log_responses: bool = False,
-        timeout: tuple[float, float] = (600.0, 5.0),
     ):
 
         self.aclient = AsyncOpenAI(
             api_key=api_key,
             base_url=base_url,
-            timeout=httpx.Timeout(timeout[0], timeout[1])
+            timeout=httpx.Timeout(
+                timeout=5.0,
+                connect=10.0
+            )
         )
 
         self.model = model
