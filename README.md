@@ -7,7 +7,15 @@ Current works only for vLLM OpenAI API endpoints.
 ## Installation
 
 ```bash
+# Install:
+git clone https://github.com/petrpechman/zorobench.git
+cd zorobench
 pip install .
+```
+
+```bash
+# Direct from GitHub:
+pip install git+https://github.com/petrpechman/zorobench.git
 ```
 
 ### Optional Configuration
