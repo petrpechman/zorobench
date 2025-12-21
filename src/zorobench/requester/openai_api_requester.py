@@ -145,9 +145,9 @@ class OpenAIAPIRequester:
         else:
             itl = 0.0
 
-        itl_list = [itl] * (completions_tokens - 1) if completions_tokens > 1 else []
+        # itl_list = [itl] * (completions_tokens - 1) if completions_tokens > 1 else []
         logging.info(f"\nE2E: {e2e:.4f}s, TTFT: {ttft:.4f}s, ITL: {itl:.4f}s")
-        return RequestStatistics(e2e, ttft, tuple(itl_list), completions_tokens, 200), request_response
+        return RequestStatistics(e2e, ttft, tuple(stream_timestamps), completions_tokens, 200), request_response
 
     async def _asend_request(
         self, messages: list[dict[str, str]], params: dict[str, str], timer: RequestTimer
