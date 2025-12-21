@@ -42,7 +42,9 @@ class RequestStatistics:
         for s in statistics:
             if s.ttft is None or s.token_num is None or s.token_num <= 1:
                 continue
-            itl_values.append((s.e2e - s.ttft) / (s.token_num - 1))
+            itl = (s.e2e - s.ttft) / (s.token_num - 1)
+            for _ in range(s.token_num - 1):
+                itl_values.append(itl)
         return itl_values
 
     @staticmethod

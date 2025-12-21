@@ -124,7 +124,7 @@ class OpenAIAPIRequester:
             if chunk.usage:
                 completions_tokens = chunk.usage.completion_tokens
 
-        e2e, ttft, itl_list = timer.finalize()
+        e2e, ttft, stream_timestamps = timer.finalize()
 
         if ttft is None:
             raise RuntimeError("TTFT is None after streaming completion.")
@@ -132,11 +132,11 @@ class OpenAIAPIRequester:
         if completions_tokens is None:
             raise RuntimeError("Failed to retrieve the number of tokens from the stream.")
 
-        output_tokens = 1 + len(itl_list)
+        stream_outputs = 1 + len(stream_timestamps)
 
-        if completions_tokens != output_tokens:
+        if completions_tokens != stream_outputs:
             logging.warning(
-                f"Completion tokens: {completions_tokens} != Output tokens: {output_tokens}\n"
+                f"Completion tokens: {completions_tokens} != stream outputs: {stream_outputs}\n"
                 f"Request response: {request_response}"
             )
 
@@ -145,6 +145,7 @@ class OpenAIAPIRequester:
         else:
             itl = 0.0
 
+        itl_list = [itl] * (completions_tokens - 1) if completions_tokens > 1 else []
         logging.info(f"\nE2E: {e2e:.4f}s, TTFT: {ttft:.4f}s, ITL: {itl:.4f}s")
         return RequestStatistics(e2e, ttft, tuple(itl_list), completions_tokens, 200), request_response
 
