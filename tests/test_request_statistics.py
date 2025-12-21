@@ -88,7 +88,9 @@ def test_itl_derived_from_successful_requests_only(tmp_path, sample_statistics):
     for s in successful:
         if s.ttft is None or s.token_num is None or s.token_num <= 1:
             continue
-        itl_values.append((s.e2e - s.ttft) / (s.token_num - 1))
+        itl = (s.e2e - s.ttft) / (s.token_num - 1)
+        for _ in range(s.token_num - 1):
+            itl_values.append(itl)
 
     expected_itl_mean = statistics.mean(itl_values)
     expected_itl_p50 = statistics.median(itl_values)
